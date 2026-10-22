@@ -8,7 +8,7 @@
     window.__SUPABASE_URL = 'https://jtibpyjmqqxswqfeszkn.supabase.co';
     window.__SUPABASE_ANON = 'sb_publishable_3i_nEwA4MoYWEBJLM89HRA_PGurRMxv';
   </script>
-  <script defer src="./assets/index-DFvzkw1n.js"></script>
+  <script defer src="./assets/index-BYjCXCzb.js"></script>
 </head>
 <body>
   <!-- 主页：登录 / 注册 + 我的项目（上传与管理） -->
@@ -90,7 +90,10 @@
     <main id="main">
       <!-- 左侧：构件筛选 -->
       <aside id="tree-panel">
-        <div class="panel-header"><span>构件筛选</span></div>
+        <div class="panel-header">
+          <span>构件筛选</span>
+          <button id="btn-close-tree" class="mini-btn" title="收起筛选面板">✕</button>
+        </div>
         <div id="filter-container" class="panel-body">
           <div class="empty-hint">打开 IFC 文件后可按类别 / 编号 / 标高筛选构件</div>
         </div>
@@ -104,11 +107,17 @@
         </div>
         <div id="measure-label" class="measure-label" style="display:none"></div>
         <div id="axes-label"></div>
+        <!-- 面板浮动展开按钮（面板收起时显示） -->
+        <button id="btn-open-tree" class="panel-float-btn float-left" title="展开筛选面板" style="display:none">☰ 筛选</button>
+        <button id="btn-open-prop" class="panel-float-btn float-right" title="展开属性面板" style="display:none">ⓘ 属性</button>
       </section>
 
       <!-- 右侧：属性面板 -->
       <aside id="prop-panel">
-        <div class="panel-header"><span>属性 / 信息</span></div>
+        <div class="panel-header">
+          <span>属性 / 信息</span>
+          <button id="btn-close-prop" class="mini-btn" title="收起属性面板">✕</button>
+        </div>
         <div id="prop-container" class="panel-body">
           <div class="empty-hint">点击构件查看属性</div>
         </div>
