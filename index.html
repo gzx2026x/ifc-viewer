@@ -8,31 +8,54 @@
     window.__SUPABASE_URL = 'https://jtibpyjmqqxswqfeszkn.supabase.co';
     window.__SUPABASE_ANON = 'sb_publishable_3i_nEwA4MoYWEBJLM89HRA_PGurRMxv';
   </script>
-  <script defer src="./assets/index-B5xjB2It.js"></script>
+  <script defer src="./assets/index-DFvzkw1n.js"></script>
 </head>
 <body>
-  <!-- 主页：上传 IFC 到云端 -->
+  <!-- 主页：登录 / 注册 + 我的项目（上传与管理） -->
   <div id="home-view" style="display:none">
-    <div class="home-card">
+    <!-- 登录 / 注册卡片（未登录时显示） -->
+    <div id="auth-card" class="home-card" style="display:none">
       <div class="home-logo">🏗️</div>
       <h1 class="home-title">IFC 模型在线查看器</h1>
-      <p class="home-sub">上传 IFC 文件，获得链接后即可在网页中查看模型<br>本软件所有权归何显刚所有</p>
+      <p class="home-sub">注册账号 · 上传 IFC · 随时查看你的模型<br>本软件所有权归何显刚所有</p>
+      <div class="auth-tabs">
+        <button id="auth-tab-login" class="auth-tab active">登录</button>
+        <button id="auth-tab-reg" class="auth-tab">注册</button>
+      </div>
+      <div id="auth-form-login">
+        <input id="login-email" class="auth-input" type="email" placeholder="邮箱地址" autocomplete="username" />
+        <input id="login-pass" class="auth-input" type="password" placeholder="密码" autocomplete="current-password" />
+        <button id="btn-login" class="tool-btn primary auth-btn">登 录</button>
+      </div>
+      <div id="auth-form-reg" style="display:none">
+        <input id="reg-email" class="auth-input" type="email" placeholder="邮箱地址" autocomplete="username" />
+        <input id="reg-pass" class="auth-input" type="password" placeholder="设置密码（至少 6 位）" autocomplete="new-password" />
+        <input id="reg-pass2" class="auth-input" type="password" placeholder="再次输入密码" autocomplete="new-password" />
+        <button id="btn-register" class="tool-btn primary auth-btn">注册并登录</button>
+      </div>
+      <div id="auth-status" class="home-status"></div>
+    </div>
+
+    <!-- 我的项目（已登录时显示） -->
+    <div id="projects-card" class="home-card" style="display:none">
+      <div class="home-logo">🏗️</div>
+      <h1 class="home-title">我的项目</h1>
+      <p class="home-sub" id="projects-user"></p>
       <div id="home-upload" class="home-upload">
         <div class="home-upload-icon">📤</div>
-        <div class="home-upload-text" id="home-upload-text">将 IFC 文件拖拽到此处，或点击选择文件</div>
-        <button id="home-pick" class="tool-btn primary">选择 IFC 文件</button>
+        <div class="home-upload-text" id="home-upload-text">将 IFC 文件拖拽到此处，或点击选择文件上传到我的项目</div>
+        <input id="home-name" class="auth-input" type="text" placeholder="项目名称（留空则用文件名）" />
+        <button id="home-pick" class="tool-btn primary">选择 IFC 文件上传</button>
       </div>
       <div id="home-status" class="home-status"></div>
-      <div id="home-success" class="home-success" style="display:none">
-        <div class="home-success-title">✅ 上传成功</div>
-        <p class="home-success-tip">复制以下链接发给需要查看模型的人，点击链接即可打开模型：</p>
-        <div class="home-link-row">
-          <input id="home-link" class="home-link-input" type="text" readonly />
-          <button id="home-copy" class="tool-btn">复制链接</button>
-          <button id="home-open" class="tool-btn primary">打开查看器 →</button>
+      <div id="project-list" class="project-list" style="display:none">
+        <div class="project-list-head">
+          <span class="pl-name">项目名称</span><span class="pl-size">大小</span><span class="pl-date">上传时间</span><span class="pl-act">操作</span>
         </div>
-        <p class="home-success-warn">链接永久有效（只要云端文件保留）。文件将公开存于云端存储，任何人都能通过链接访问。</p>
+        <div id="project-items"></div>
+        <div class="project-list-tip">点击项目名称即可打开查看器查看模型</div>
       </div>
+      <button id="btn-logout" class="tool-btn">退出登录</button>
     </div>
   </div>
 
