@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>IFC 查看器</title>
+  <!-- Supabase 云端配置：项目网址 + 公开密钥（anon/publishable key，专供浏览器使用，可公开） -->
+  <script>
+    window.__SUPABASE_URL = 'https://jtibpyjmqqxswqfeszkn.supabase.co';
+    window.__SUPABASE_ANON = 'sb_publishable_3i_nEwA4MoYWEBJLM89HRA_PGurRMxv';
+  </script>
+  <script defer src="./assets/index-B5xjB2It.js"></script>
+</head>
+<body>
+  <!-- 主页：上传 IFC 到云端 -->
+  <div id="home-view" style="display:none">
+    <div class="home-card">
+      <div class="home-logo">🏗️</div>
+      <h1 class="home-title">IFC 模型在线查看器</h1>
+      <p class="home-sub">上传 IFC 文件，获得链接后即可在网页中查看模型<br>本软件所有权归何显刚所有</p>
+      <div id="home-upload" class="home-upload">
+        <div class="home-upload-icon">📤</div>
+        <div class="home-upload-text" id="home-upload-text">将 IFC 文件拖拽到此处，或点击选择文件</div>
+        <button id="home-pick" class="tool-btn primary">选择 IFC 文件</button>
+      </div>
+      <div id="home-status" class="home-status"></div>
+      <div id="home-success" class="home-success" style="display:none">
+        <div class="home-success-title">✅ 上传成功</div>
+        <p class="home-success-tip">复制以下链接发给需要查看模型的人，点击链接即可打开模型：</p>
+        <div class="home-link-row">
+          <input id="home-link" class="home-link-input" type="text" readonly />
+          <button id="home-copy" class="tool-btn">复制链接</button>
+          <button id="home-open" class="tool-btn primary">打开查看器 →</button>
+        </div>
+        <p class="home-success-warn">链接永久有效（只要云端文件保留）。文件将公开存于云端存储，任何人都能通过链接访问。</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app">
+    <!-- 顶部工具栏 -->
+    <header id="toolbar">
+      <div class="toolbar-group">
+        <button id="btn-open" class="tool-btn primary" title="打开 IFC 文件 (Ctrl+O)">📂 打开 IFC</button>
+        <span class="divider"></span>
+        <button id="btn-reset-view" class="tool-btn" title="重置视角 (Ctrl+0)">🎯 重置视角</button>
+        <button id="btn-views" class="tool-btn" title="切换视图">👁 视图</button>
+        <button id="btn-grid" class="tool-btn toggle active" title="显示/隐藏轴线 (Ctrl+G)">🗺 轴线</button>
+        <select id="grid-level" class="grid-level-select" style="display:none" title="选择显示标高的轴网"></select>
+        <button id="btn-select-mode" class="tool-btn toggle" title="切换选择方式：整件（装配体全部零件高亮）/ 零件（单个零件高亮）">🧩 整件</button>
+        <button id="btn-wireframe" class="tool-btn" title="线框模式 (Ctrl+W)">🕸 线框</button>
+        <span class="divider"></span>
+        <button id="btn-measure" class="tool-btn toggle" title="距离测量：点击构件轮廓顶点或螺栓中心测量距离">📏 测量</button>
+        <button id="btn-clear-measure" class="tool-btn" title="清除全部测量结果">🧽 清除测量</button>
+        <button id="btn-section" class="tool-btn toggle" title="剖切工具">✂ 剖切</button>
+        <button id="btn-iso" class="tool-btn" title="只显示选中的构件/装配体">🔦 只显示选中</button>
+        <button id="btn-hide-selected" class="tool-btn" title="隐藏选中的构件/装配体">🙈 隐藏选中</button>
+        <button id="btn-show-all" class="tool-btn" title="显示全部构件">👀 全部显示</button>
+        <span class="divider"></span>
+        <button id="btn-export" class="tool-btn" title="导出零件/构件/螺栓清单">📤 导出</button>
+        <button id="btn-stats" class="tool-btn" title="构件统计">📊 统计</button>
+        <button id="btn-help" class="tool-btn" title="使用说明">❓ 帮助</button>
+      </div>
+      <div id="file-info" class="toolbar-info">未加载文件</div>
+    </header>
+
+    <!-- 主体区域 -->
+    <main id="main">
+      <!-- 左侧：构件筛选 -->
+      <aside id="tree-panel">
+        <div class="panel-header"><span>构件筛选</span></div>
+        <div id="filter-container" class="panel-body">
+          <div class="empty-hint">打开 IFC 文件后可按类别 / 编号 / 标高筛选构件</div>
+        </div>
+      </aside>
+
+      <!-- 中央：3D 视口 -->
+      <section id="viewport-wrap">
+        <div id="viewport"></div>
+        <div id="view-hint" class="view-hint">
+          <b>左键</b>旋转 · <b>按住滚轮</b>平移 · <b>滚轮</b>缩放 · <b>点击构件</b>查看属性
+        </div>
+        <div id="measure-label" class="measure-label" style="display:none"></div>
+        <div id="axes-label"></div>
+      </section>
+
+      <!-- 右侧：属性面板 -->
+      <aside id="prop-panel">
+        <div class="panel-header"><span>属性 / 信息</span></div>
+        <div id="prop-container" class="panel-body">
+          <div class="empty-hint">点击构件查看属性</div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- 状态栏 -->
+    <footer id="statusbar">
+      <span id="status-msg">就绪</span>
+      <span id="status-model" class="status-right"></span>
+    </footer>
+  </div>
+
+  <!-- 剖切控制浮层 -->
+  <div id="section-panel" class="floating-panel" style="display:none">
+    <div class="floating-title">剖切工具</div>
+    <div class="section-row">
+      <label><input type="checkbox" id="section-x" /> X 方向</label>
+      <input type="range" id="section-x-pos" min="0" max="100" value="50" />
+      <span class="section-val" id="section-x-val">50%</span>
+    </div>
+    <div class="section-row">
+      <label><input type="checkbox" id="section-y" /> Y 方向</label>
+      <input type="range" id="section-y-pos" min="0" max="100" value="50" />
+      <span class="section-val" id="section-y-val">50%</span>
+    </div>
+    <div class="section-row">
+      <label><input type="checkbox" id="section-z" /> Z 方向</label>
+      <input type="range" id="section-z-pos" min="0" max="100" value="50" />
+      <span class="section-val" id="section-z-val">50%</span>
+    </div>
+    <div class="section-actions">
+      <button id="section-click-toggle" class="mini-btn" style="margin-right:8px">📌 点击剖切：关</button>
+      <button id="section-reset" class="mini-btn">重置</button>
+      <button id="section-close" class="mini-btn">关闭</button>
+    </div>
+  </div>
+
+  <!-- 统计浮层 -->
+  <div id="stats-panel" class="floating-panel wide" style="display:none">
+    <div class="floating-title">构件统计 <span class="float-sub" id="stats-sub"></span></div>
+    <div id="stats-body" class="stats-body"></div>
+    <div class="section-actions"><button id="stats-close" class="mini-btn">关闭</button></div>
+  </div>
+
+  <!-- 帮助浮层 -->
+  <div id="help-panel" class="floating-panel wide" style="display:none">
+    <div class="floating-title">使用说明</div>
+    <div class="help-body">
+      <p><b>打开文件：</b>工具栏「打开 IFC」、菜单「文件 → 打开」，或将 .ifc 文件直接拖入窗口。</p>
+      <p><b>视图操作：</b>左键拖拽旋转 · 按住滚轮拖拽平移 · 滚轮缩放 · 双击构件聚焦。</p>
+      <p><b>构件树：</b>左侧按 IFC 层级展示构件，复选框可单独控制显隐；顶部输入框可过滤。</p>
+      <p><b>属性查看：</b>在视口中点击任意构件，右侧面板显示其类型、属性集与数量信息。</p>
+      <p><b>测量：</b>点击「测量」进入测量模式，左键依次点击两点测量距离；拾取自动吸附到<b>构件轮廓点</b>或<b>螺栓中心</b>（点击位置需靠近目标）。测量时鼠标靠近零件会显示<b>黄色</b>捕捉点标记：<b>□端点（小方框）、△中点（小三角）、✚交点（十字）、●螺栓中心（小圆点）</b>；再次点击「测量」退出，点「🧽 清除测量」随时清除全部测量结果。</p>
+      <p><b>剖切：</b>点击「剖切」打开剖切面板，勾选方向并拖动滑杆查看剖面。</p>
+      <p><b>显隐：</b>选中构件后点「孤立」只显示选中项；「全部显示」恢复。</p>
+      <p><b>统计：</b>点击「统计」查看各构件类型数量分布。</p>
+      <p><b>轴线：</b>点击「轴线」显示/隐藏平面轴网；右侧下拉可选择不同标高的轴网。</p>
+      <hr style="border-color: var(--border); margin: 12px 0;">
+      <p style="color: var(--fg-dim); font-size: 12px;">IFC 查看器 1.0.0 · 本软件所有权归何显刚所有</p>
+    </div>
+    <div class="section-actions"><button id="help-close" class="mini-btn">关闭</button></div>
+  </div>
+
+  <!-- 导出面板 -->
+  <div id="export-panel" class="floating-panel" style="display:none">
+    <div class="floating-title">导出清单（CSV，Excel 可直接打开）</div>
+    <div class="help-body">
+      <p style="color:var(--fg-dim);font-size:12px;margin-bottom:8px">选择要导出的清单类型：</p>
+      <div class="export-btns">
+        <button id="btn-export-parts" class="export-btn">🧩 零件清单</button>
+        <button id="btn-export-assemblies" class="export-btn">🏗️ 构件清单</button>
+        <button id="btn-export-bolts" class="export-btn">🔩 螺栓清单</button>
+      </div>
+      <p style="color:var(--fg-dim);font-size:12px;margin-top:8px">零件清单：零件编号、规格、长度、数量、材质、单重、单表面积；构件清单：名称、构件编号（Assembly mark）、规格（最长零件）、长度、数量、单重、总重、单表面积、总表面积；螺栓清单：规格、等级、总数量。长度 mm，重量 kg，表面积 m²。</p>
+    </div>
+    <div class="section-actions"><button id="export-close" class="mini-btn">关闭</button></div>
+  </div>
+
+  <div id="drop-overlay" style="display:none">松开以打开 IFC 文件</div>
+
+  <!-- 右键功能菜单 -->
+  <div id="ctx-menu" class="ctx-menu" style="display:none">
+    <div class="ctx-item" data-act="isolate">🔦 只显示选中</div>
+    <div class="ctx-item" data-act="hide">🙈 隐藏选中</div>
+    <div class="ctx-item" data-act="showall">👀 全部显示</div>
+  </div>
+
+</body>
+</html>
